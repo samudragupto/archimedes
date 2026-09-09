@@ -1,0 +1,86 @@
+# =============================================================================
+# ARCHIMEDES — local development stack
+#
+#   docker compose up                          api (:8000) + worker + web (:3000)
+#   docker compose down
+#   docker compose --profile test up -d db     throwaway Postgres for pytest
+#
+# Supabase (hosted free tier) remains the real database/storage/realtime —
+# the `db` service below is only for schema-level unit tests without the cloud.
+#
+# Worker routing, in plain words:
+#   * LOCAL_WORKER_MODE=true  → the API spawns worker/main.py itself as a
+#     subprocess per job. This is the bare-metal laptop path (`make api`).
+#   * In this compose file the API runs with LOCAL_WORKER_MODE=false and the
+#     dedicated `worker` container polls for queued jobs and claims them
+#     atomically (UPDATE ... WHERE status='queued' ... RETURNING), so exactly
+#     one worker ever executes a given job even if both paths are enabled.
+# =============================================================================
+name: archimedes
+
+services:
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      LOCAL_WORKER_MODE: "false" # the worker container owns job execution here
+    volumes:
+      - ./services/api:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  worker:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile.worker
+    command: python worker/main.py --poll
+    env_file:
+      - .env
+    volumes:
+      - ./services/api:/app
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    command: pnpm dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # the browser talks to FastAPI directly, not through the Next.js server
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    volumes:
+      - ./apps/web:/app
+      - web_node_modules:/app/node_modules
+      - web_next_cache:/app/.next
+    depends_on:
+      api:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: archimedes_test
+    ports:
+      - "54329:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+volumes:
+  web_node_modules:
+  web_next_cache:

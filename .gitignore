@@ -1,0 +1,51 @@
+# ============================================================================
+# ARCHIMEDES — .gitignore
+# ============================================================================
+
+# ---- secrets (never commit; .env.example IS committed) ----
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+.mypy.ini.bak
+
+# ---- node / next.js ----
+node_modules/
+.next/
+out/
+.turbo/
+.vercel
+*.tsbuildinfo
+.eslintcache
+next-env.d.ts
+
+# ---- build artifacts ----
+dist/
+build/
+target/
+
+# ---- local runtime state ----
+tmp/
+uploads/
+*.log
+worker-local-state/
+
+# ---- editors / OS ----
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
