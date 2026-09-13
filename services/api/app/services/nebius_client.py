@@ -100,9 +100,6 @@ class JSONRepairError(ValueError):
     """Raised when a model's content cannot be repaired into parseable JSON."""
 
 
-_THINK_TAIL_RE = re.compile(r"^[^<]*</think>\s*", re.DOTALL)
-
-
 def strip_think(text: str) -> str:
     """Remove Nemotron reasoning blocks.
 
