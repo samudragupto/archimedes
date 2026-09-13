@@ -1,0 +1,6 @@
+# Development & CI tools — installed by `make setup` (see Makefile venv target)
+pytest>=8.0
+pytest-asyncio>=0.24
+ruff>=0.6
+black>=24.8
+mypy>=1.11

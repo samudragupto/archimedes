@@ -1,0 +1,46 @@
+[project]
+name = "archimedes-api"
+version = "0.2.0"
+description = "ARCHIMEDES — autonomous grant-writing agent (FastAPI + LangGraph worker)"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+# ---- lint (kept deliberately pragmatic; `make lint`) ------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+# E501: line length is enforced by black at 100; ruff stays lenient on the
+# occasional long string (prompts, URLs) to avoid noise.
+ignore = ["E501"]
+
+# ---- formatting -------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+# ---- type checking (lenient per project spec) -------------------------------
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+check_untyped_defs = false
+warn_unused_ignores = false
+follow_imports = "silent"
+exclude = ["tests"]
+
+# mypy false positive on StrEnum members (python/mypy#17373): `draft = "draft"`
+# is flagged as an incompatible str assignment. The enums in schemas.py are the
+# only place this pattern occurs.
+[[tool.mypy.overrides]]
+module = "app.models.schemas"
+disable_error_code = ["assignment"]
+
+# ---- tests ------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-q"

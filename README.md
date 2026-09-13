@@ -45,7 +45,7 @@ estimated cost into a live event stream the UI renders as an agent trace.
 | Phase | Scope | Status |
 |------|-----------------------------------------------------------|--------|
 | 1 | Repo scaffold, Supabase schema + RLS, Docker, Makefile | ✅ done |
-| 2 | Nebius client + ModelRouter, Tavily, document parsing (+ tests) | 🔨 |
+| 2 | Nebius client + ModelRouter, Tavily, document parsing — **86 tests green** | ✅ done |
 | 3 | LangGraph agent pipeline, worker, live job events | 🔨 |
 | 4 | FastAPI routers, Supabase auth, MD/DOCX/PDF export | 🔨 |
 | 5 | Next.js workspace UI (5 tabs) + Supabase Realtime | 🔨 |
