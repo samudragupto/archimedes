@@ -459,3 +459,18 @@ def test_health_reports_configuration():
     assert body["status"] == "ok"
     assert set(body["models"]) == {"nano", "super", "ultra"}
     assert body["mock_llm"] is True  # conftest pins MOCK_LLM=true
+
+
+# ---------------------------------------------------------------------------
+# ops: unconfigured database answers 503, not 500
+# ---------------------------------------------------------------------------
+def test_missing_supabase_env_is_503(monkeypatch, store, client):
+    from app.db import DatabaseNotConfigured
+
+    def boom(*a, **k):
+        raise DatabaseNotConfigured("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set.")
+
+    monkeypatch.setattr(dbmod, "list_projects", boom)
+    res = client.get("/api/v1/projects")
+    assert res.status_code == 503
+    assert "SUPABASE_URL" in res.json()["detail"]

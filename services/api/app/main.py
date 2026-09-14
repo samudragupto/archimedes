@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from . import db
 from .agent import fixtures  # noqa: F401 — registers MOCK fixtures for offline mode
 from .config import get_settings
 from .routers import api_router
@@ -42,6 +44,12 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router, prefix="/api/v1")
     app.include_router(health_router.router)  # /health at the root (container probes)
+
+    @app.exception_handler(db.DatabaseNotConfigured)
+    async def _db_not_configured(request: Request, exc: db.DatabaseNotConfigured) -> JSONResponse:
+        # Missing Supabase env is an operator problem, not a client error —
+        # answer 503 with the fix instead of a 500 stack trace.
+        return JSONResponse(status_code=503, content={"detail": str(exc)})
 
     logger.info(
         "Archimedes API ready · nano=%s super=%s ultra=%s mock=%s",
