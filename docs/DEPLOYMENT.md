@@ -102,7 +102,7 @@ make web            # Next.js dev server   → http://localhost:3000
 ```bash
 curl -s localhost:8000/health | python3 -m json.tool
 # → nebius/tavily key validity, configured model ids, mock flag, worker mode
-make smoke          # end-to-end: health → demo project → job completes
+make smoke          # 9-check offline smoke (fixtures, exporter, auth); add --live <url> to probe a running stack
 ```
 
 ## 5. The 60-second demo (no UI needed)
@@ -169,7 +169,8 @@ for the local-subprocess fallback — identical code path either way.
 
 ```bash
 curl -s https://<api-host>/health
-API_URL=https://<api-host> make smoke
+services/api/.venv/bin/python scripts/smoke_test.py --live https://<api-host>
+#   validates /health?deep=true (both provider keys) and 401-on-anonymous against the deployed API
 ```
 
 ## 8. Troubleshooting

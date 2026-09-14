@@ -127,7 +127,7 @@ mirrored again in `apps/web/lib/types.ts` for the frontend.
 | Tavily query fails | try/except per query, warn event, run continues |
 | Model call 429/5xx/timeout | tenacity exponential backoff (4 attempts), then node raises |
 | Node raises | pipeline traced (`error` event), job marked `failed` with the error, project status `failed`, worker exit code 1 |
-| Worker dies mid-run | job stays `running` until a timeout sweep (Phase 6 smoke check) or manual re-run; idempotent re-run replaces requirements/issues/sections wholesale |
+| Worker dies mid-run | job stays `running` (visible in the UI as such) until a manual re-run; re-runs are idempotent — requirements/issues/sections are replaced wholesale |
 
 ## Cost of a live run (order of magnitude)
 
@@ -135,4 +135,22 @@ mirrored again in `apps/web/lib/types.ts` for the frontend.
 3–5 Super (planning, outline, audits), 6–10 Ultra (draft + revise). Drafting is
 <30% of calls but >85% of tokens — which is why the router exists. Every call
 logs `tokens_in/out`, `latency_ms`, and `estimated_cost_usd` to `job_events`;
-the UI's Model Router panel sums them live.
+the Agent Run console shows each cost inline as it happens.
+
+## HTTP surface & frontend wiring
+
+The API exposes 14 routes under `/api/v1` (full reference with curl examples:
+[API.md](API.md)): projects CRUD + aggregate, documents (upload/URL),
+jobs (run/status/events), section PATCH, one-click compliance fix, SSE chat,
+md/docx/pdf export, health. Every route verifies the caller's Supabase JWT
+(`app/auth.py`) and scopes access with `require_project` — a foreign resource
+is a 404, never a 403.
+
+The browser never reads project tables directly: `apps/web/lib/api.ts` is the
+single typed client (mirrors of the Pydantic models live in `lib/types.ts`).
+Supabase is used from the browser only for **auth** (anon key) and
+**Realtime** postgres_changes on `jobs`/`job_events`/`sections`/
+`compliance_issues`; each broadcast triggers an aggregate refetch, and a 4 s
+poll of the active job backs it up while a run is in flight. The chat
+assistant consumes the API's SSE stream directly (Nano classifies → optional
+Tavily round → Super streams the grounded answer).

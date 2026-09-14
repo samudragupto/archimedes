@@ -59,14 +59,15 @@ demo: ## run the full agent pipeline on the bundled fixture (terminal trace; off
 test: ## run Python tests (no credits needed — MOCK_LLM fixtures)
 	cd $(API_DIR) && MOCK_LLM=true .venv/bin/python -m pytest -q
 
-lint: ## ruff + black + mypy + eslint
-	cd $(API_DIR) && .venv/bin/ruff check app worker tests
+lint: ## ruff + black + mypy + eslint (+ scripts/ formatting)
+	cd $(API_DIR) && .venv/bin/ruff check app worker tests ../../scripts
 	cd $(API_DIR) && .venv/bin/black --check app worker tests
+	cd $(API_DIR) && .venv/bin/black --check ../../scripts
 	cd $(API_DIR) && .venv/bin/mypy app --ignore-missing-imports
-	pnpm --dir $(WEB_DIR) lint
+	pnpm --dir $(WEB_DIR) typecheck
 
 format: ## auto-format Python and web code
-	cd $(API_DIR) && .venv/bin/black app worker tests && .venv/bin/ruff check --fix app worker tests
+	cd $(API_DIR) && .venv/bin/black app worker tests ../../scripts && .venv/bin/ruff check --fix app worker tests ../../scripts
 	pnpm --dir $(WEB_DIR) exec prettier --write .
 
 migrate: ## apply Supabase migrations (DATABASE_URL=... make migrate, or `supabase db push`)

@@ -71,7 +71,7 @@ make dev              # docker compose: api :8000 · worker · web :3000
 
 # 4 · verify
 curl localhost:8000/health
-make smoke            # end-to-end check against the running stack
+make smoke            # 9-check smoke test (offline; --live URL probes a running stack)
 ```
 
 Full step-by-step (Supabase provisioning, OAuth, Vercel, Nebius Serverless):
@@ -83,13 +83,14 @@ Three ways, all offline:
 
 ```bash
 make demo                       # full agent pipeline in your terminal, live trace
-make test                       # 110+ tests incl. full-graph integration
+make test                       # 147 tests incl. full-graph integration
+make seed-demo                  # seed the demo project into Supabase for the web UI
 ```
 
-…or set `MOCK_LLM=true` and click **Demo Project** in the web UI — the whole
-product (extraction → research → drafting → audit → revision → export) runs on
-deterministic fixtures. Mock citations use `mock.tavily.local` so they can
-never be mistaken for live research.
+…or set `MOCK_LLM=true`, sign in, and press **Try the demo project** — the
+whole product (extraction → research → drafting → audit → revision → export)
+runs on deterministic fixtures. Mock citations use `mock.tavily.local` so they
+can never be mistaken for live research.
 
 With credits, `worker/main.py --demo --live` runs the same bundled mock
 solicitation against real Nemotron + Tavily.
@@ -161,24 +162,30 @@ flowchart TD
 
 LangGraph owns the loop — 8 pure nodes over a typed `ProposalState`, routing
 in one function. FastAPI (Pydantic v2) + Supabase Postgres with RLS on every
-table; Next.js 14 + Tiptap + Recharts in front. Full diagrams and the data
-flow: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+table; Next.js 14 (App Router, TypeScript strict, Tailwind) in front, live via
+Supabase Realtime + SSE. Full diagrams and the data flow:
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Repository map
 
 ```
 archimedes/
-├── apps/web/            Next.js 14 (App Router, TS, Tailwind, shadcn/ui)
-│   ├── app/(marketing) | (auth)/login | dashboard/[projectId] · api/
-│   └── components/{upload,requirements,agent,editor,compliance,export,layout,ui}
+├── apps/web/            Next.js 14 App Router (TS strict · Tailwind · shadcn-style ui)
+│   ├── app/             landing · (auth)/login · dashboard · dashboard/new · [projectId]
+│   ├── components/      ui kit + {requirements,agent,editor,compliance,export,layout,auth}
+│   ├── lib/             api client (typed + SSE) · supabase clients · types (mirrors API)
+│   └── middleware.ts    session refresh + /dashboard guard
 ├── services/api/        FastAPI + LangGraph + worker (shared package)
-│   ├── app/routers/     projects · documents · jobs · chat · export · health
-│   ├── app/services/    nebius_client (ModelRouter) · tavily · parser · export…
-│   ├── app/agent/       state · graph · nodes/ · prompts/ · fixtures
+│   ├── app/routers/     projects · documents · jobs · chat(SSE) · export · health
+│   ├── app/services/    nebius_client (ModelRouter+stream) · tavily · parser · storage · job_launcher · exporter
+│   ├── app/auth.py      Supabase JWT verification (HS256 / JWKS)
+│   ├── app/agent/       state · graph · nodes/ · prompts/ · fixtures · reporter
 │   ├── worker/main.py   one entrypoint: JOB_ID | --poll | --demo
-│   └── tests/           offline pytest suite (MOCK_LLM fixtures)
+│   ├── Dockerfile(.worker)  api + worker images (docker compose / Nebius Jobs)
+│   └── tests/           147 offline tests (MOCK_LLM fixtures)
 ├── supabase/            0001_init.sql (RLS + realtime + storage) · seed.sql
-├── docs/                PRD · ARCHITECTURE · NEBIUS_NVIDIA_USAGE · DEPLOYMENT
+├── docs/                PRD · ARCHITECTURE · API · SECURITY · DEPLOYMENT ·
+│                        DEMO_SCRIPT · NEBIUS_NVIDIA_USAGE
 └── scripts/             setup.sh · demo_seed.py · smoke_test.py
 ```
 
