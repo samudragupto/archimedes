@@ -180,7 +180,7 @@ class SupabaseRunReporter(RunReporter):
             await self._run(self.db.update_project, self.project_id, status=project_status)
 
     async def persist_requirements(self, project_id, requirements):
-        rows, ids = await self._run(self.db.replace_requirements, project_id, requirements)
+        ids = await self._run(self.db.replace_requirements, project_id, requirements)
         return ids
 
     async def persist_findings(self, project_id, findings):
