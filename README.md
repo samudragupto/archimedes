@@ -16,7 +16,7 @@ Grant writers cost \$100–200/hour. Archimedes costs a few cents of API credit.
 
 *Built for the **Nebius × NVIDIA Global AI Hackathon** — Best Apps & Agents Track*
 
-![demo placeholder](docs/demo.gif)
+[![CI](https://github.com/OWNER/archimedes/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
 `NVIDIA Nemotron on Nebius Token Factory` · `LangGraph` · `Tavily` · `Supabase` · `FastAPI` · `Next.js 14` · `Nebius Serverless`
 

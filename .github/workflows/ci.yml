@@ -1,0 +1,86 @@
+name: CI
+
+# Every PR and every push to main runs the exact gates a contributor is told
+# to run in CONTRIBUTING.md — all offline (MOCK_LLM fixtures, no secrets).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API · lint + types + tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            services/api/requirements.txt
+            services/api/requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: ruff
+        run: ruff check app worker tests ../../scripts
+
+      - name: black
+        run: black --check app worker tests
+
+      - name: mypy
+        run: mypy app
+
+      - name: pytest (offline via MOCK_LLM fixtures)
+        env:
+          MOCK_LLM: "true"
+        run: python -m pytest -q
+
+      - name: offline smoke test (repo root)
+        working-directory: ${{ github.workspace }}
+        run: python scripts/smoke_test.py
+
+  web:
+    name: Web · typecheck + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies (npm ci — lockfile is authoritative)
+        run: npm ci
+
+      - name: typecheck (tsc --noEmit, strict)
+        run: npm run typecheck
+
+      - name: production build
+        env:
+          # placeholder publics: real values are injected per-environment
+          # (Vercel dashboard / runtime env). The build only needs them defined.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: npm run build

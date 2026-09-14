@@ -1,0 +1,14 @@
+# keep build context small and images clean
+# NOTE: never exclude *.md here — app/agent/prompts/*.md are loaded at runtime
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tests/
+tmp/
+.env
+.env.*
+Dockerfile*
+.dockerignore

@@ -53,7 +53,7 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
-    command: pnpm dev
+    command: npm run dev
     ports:
       - "3000:3000"
     env_file:

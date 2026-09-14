@@ -125,6 +125,20 @@ make format         # black + ruff --fix + prettier
 
 ## 7. Deploying
 
+### CI/CD (GitHub Actions, included)
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| **ci.yml** | every PR / push to `main` | The exact repo gates, no secrets needed: ruff + black + mypy + 147 offline pytest + `scripts/smoke_test.py` (API job) and `tsc --noEmit` + `next build` (web job). |
+| **release.yml** | push to `main`, tags `v*` | Builds and publishes `ghcr.io/<owner>/archimedes-api` and `ghcr.io/<owner>/archimedes-worker` (tags: branch, tag, `sha-<short>`, `latest`), then boots the pushed API image and asserts `GET /health` answers `ok`. |
+| **dependabot.yml** | weekly | pip / npm / docker / actions version bumps. |
+
+Badges: the README carries the CI badge; the release images appear under your
+repo's **Packages** once `main` has built once. Everything below can use the
+published images instead of building locally — substitute
+`ghcr.io/<owner>/archimedes-<api|worker>:latest` for the `docker build`/push
+commands.
+
 ### Frontend → Vercel
 
 1. Import the repo; **Root Directory**: `apps/web`; framework auto-detects Next.js.
@@ -137,16 +151,18 @@ make format         # black + ruff --fix + prettier
 
 | Target | How |
 |---|---|
-| **Nebius Serverless Endpoint** (preferred for the hackathon) | `docker build -f services/api/Dockerfile -t archimedes-api .` → push to the Nebius container registry → create an Endpoint from the image, port `8000`, set the env vars from `.env` (service-role key included) → point `NEXT_PUBLIC_API_URL` at the endpoint URL. |
+| **Nebius Serverless Endpoint** (preferred for the hackathon) | Use the published `ghcr.io/<owner>/archimedes-api:latest` (or `docker build -f services/api/Dockerfile -t archimedes-api .` → push) → create an Endpoint from the image, port `8000`, set the env vars from `.env` (service-role key included) → point `NEXT_PUBLIC_API_URL` at the endpoint URL. |
 | **Render.com** (documented fallback) | New → Web Service → Docker → root `services/api` → health check path `/health` → add the same env vars. Free instance sleeps; first request warms it. |
 | **Any container host** | The image listens on `$PORT`-agnostic `8000`; set env, done. |
 
 ### Worker → Nebius Serverless Jobs
 
 ```bash
+# build & push yourself…
 docker build -f services/api/Dockerfile.worker -t archimedes-worker services/api
-# push to your registry, then create a Job in the Nebius console:
-#   image: <registry>/archimedes-worker
+# …or skip the build: release.yml already publishes ghcr.io/<owner>/archimedes-worker
+# create a Job in the Nebius console:
+#   image: <registry>/archimedes-worker   (GHCR needs a registry secret for the private pull)
 #   command: python worker/main.py            (JOB_ID injected per run by the API)
 #   env: NEBIUS_*, SUPABASE_* (service role), TAVILY_API_KEY, MOCK_LLM
 #   restart: never · timeout: 30 min
