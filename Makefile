@@ -29,8 +29,12 @@ venv: ## create the Python virtualenv and install API deps
 	$(API_DIR)/.venv/bin/pip install --upgrade pip
 	$(API_DIR)/.venv/bin/pip install -r $(API_DIR)/requirements.txt
 
-web-install: ## install web dependencies (pnpm)
-	pnpm --dir $(WEB_DIR) install
+# pnpm preferred (matches apps/web/Dockerfile); npm is a drop-in fallback so
+# an npm-only laptop never hits a wall — both read the same package.json.
+WEB_PM := $(shell command -v pnpm >/dev/null 2>&1 && echo pnpm || echo "npm --prefix")
+
+web-install: ## install web dependencies (pnpm, falling back to npm)
+	cd $(WEB_DIR) && $(WEB_PM) install
 
 dev: ## run the full stack via docker compose (api :8000, web :3000, worker)
 	docker compose up --build
@@ -51,7 +55,7 @@ worker: ## run the local polling worker locally
 	cd $(API_DIR) && .venv/bin/python worker/main.py --poll
 
 web: ## run the Next.js dev server locally
-	pnpm --dir $(WEB_DIR) dev
+	cd $(WEB_DIR) && $(WEB_PM) run dev
 
 demo: ## run the full agent pipeline on the bundled fixture (terminal trace; offline)
 	cd $(API_DIR) && .venv/bin/python worker/main.py --demo
