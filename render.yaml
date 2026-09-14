@@ -1,0 +1,35 @@
+# =============================================================================
+# ARCHIMEDES API — Render.com one-click blueprint (documented fallback host;
+# the hackathon-preferred target is a Nebius Serverless Endpoint, see
+# docs/DEPLOYMENT.md §7). Create → "New Blueprint Instance" → point at repo.
+#
+# NOTE ON VOLUMES/DISK: none needed — all state lives in Supabase.
+# =============================================================================
+services:
+  - type: web
+    name: archimedes-api
+    runtime: docker
+    dockerfilePath: ./services/api/Dockerfile
+    dockerContext: ./services/api
+    healthCheckPath: /health
+    plan: starter
+    autoDeploy: true
+    envVars:
+      - key: LOCAL_WORKER_MODE
+        value: "true" # single-instance fallback: spawn workers in-process
+      - key: MOCK_LLM
+        sync: false
+      - key: NEBIUS_API_KEY
+        sync: false
+      - key: NEBIUS_BASE_URL
+        value: https://api.studio.nebius.com/v1/
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false

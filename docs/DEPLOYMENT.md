@@ -152,7 +152,7 @@ commands.
 | Target | How |
 |---|---|
 | **Nebius Serverless Endpoint** (preferred for the hackathon) | Use the published `ghcr.io/<owner>/archimedes-api:latest` (or `docker build -f services/api/Dockerfile -t archimedes-api .` → push) → create an Endpoint from the image, port `8000`, set the env vars from `.env` (service-role key included) → point `NEXT_PUBLIC_API_URL` at the endpoint URL. |
-| **Render.com** (documented fallback) | New → Web Service → Docker → root `services/api` → health check path `/health` → add the same env vars. Free instance sleeps; first request warms it. |
+| **Render.com** (documented fallback) | One click: New → **Blueprint** → pick the repo (the bundled `render.yaml` sets the Docker build, `/health` health check and env slots). Or manually: New → Web Service → Docker → root `services/api` → health check `/health` → same env vars. Free instance sleeps; first request warms it. |
 | **Any container host** | The image listens on `$PORT`-agnostic `8000`; set env, done. |
 
 ### Worker → Nebius Serverless Jobs

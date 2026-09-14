@@ -201,7 +201,8 @@ archimedes/
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | web | browser auth + realtime |
 | `NEXT_PUBLIC_API_URL` | web | FastAPI base URL |
 | `LOCAL_WORKER_MODE` | api | `true`: spawn worker subprocess per job |
-| `NEBIUS_SERVERLESS_ENABLED` / `_JOB_IMAGE` / `NEBIUS_PROJECT_ID` | api | submit jobs to Nebius Serverless instead |
+| `NEBIUS_SERVERLESS_ENABLED` / `_JOB_IMAGE` / `NEBIUS_PROJECT_ID` / `NEBIUS_JOBS_API_URL` | api | submit jobs to Nebius Serverless instead |
+| `SUPABASE_JWT_SECRET` | api | verifies Supabase JWTs (HS256) — or leave empty to use Supabase JWKS |
 | `MOCK_LLM` | api, worker | deterministic offline fixtures |
 
 ## Make targets
