@@ -71,7 +71,7 @@ insert into public.projects (
   'Community Flood-Sensor Network & Resident Response Program',
   'National Resilience Foundation (mock NSF-style program)',
   'complete',
-  94,
+  84,
   now() - interval '3 hours', now() - interval '117 minutes'
 ) on conflict (id) do nothing;
 
@@ -216,7 +216,8 @@ insert into public.sections (id, project_id, order_index, title, content_md, mod
 on conflict (id) do nothing;
 
 -- -----------------------------------------------------------------------------
--- Compliance issues (score = 100 − 0·25 − 0·10 − 2·3 = 94)
+-- Compliance issues (score = 100 − 1·10 − 2·3 = 84; the major issue is already
+-- marked resolved — the revise loop fixed it — but the score reflects the audit)
 -- -----------------------------------------------------------------------------
 insert into public.compliance_issues (id, project_id, section_id, requirement_id, severity, description, suggested_fix, resolved, created_at) values
   ('00000000-0000-4000-8000-000000000041',

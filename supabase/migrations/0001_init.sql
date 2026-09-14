@@ -59,6 +59,7 @@ create table public.projects (
   solicitation_doc_id uuid,
   org_doc_id          uuid,
   compliance_score    integer check (compliance_score between 0 and 100),
+  abstract            text,  -- written by the finalize node (150-word summary)
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );

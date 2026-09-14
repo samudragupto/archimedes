@@ -110,6 +110,7 @@ class Project(BaseModel):
     solicitation_doc_id: str | None = None
     org_doc_id: str | None = None
     compliance_score: int | None = Field(default=None, ge=0, le=100)
+    abstract: str | None = None
 
 
 class Document(BaseModel):

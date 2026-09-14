@@ -14,7 +14,7 @@ SHELL := /bin/bash
 API_DIR := services/api
 WEB_DIR := apps/web
 
-.PHONY: help setup venv web-install dev up down logs api worker web \
+.PHONY: help setup venv web-install dev up down logs api worker web demo \
         test lint format migrate seed-sql seed-demo smoke build-images clean
 
 help: ## show available targets
@@ -52,6 +52,9 @@ worker: ## run the local polling worker locally
 
 web: ## run the Next.js dev server locally
 	pnpm --dir $(WEB_DIR) dev
+
+demo: ## run the full agent pipeline on the bundled fixture (terminal trace; offline)
+	cd $(API_DIR) && .venv/bin/python worker/main.py --demo
 
 test: ## run Python tests (no credits needed — MOCK_LLM fixtures)
 	cd $(API_DIR) && MOCK_LLM=true .venv/bin/python -m pytest -q

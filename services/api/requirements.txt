@@ -18,6 +18,12 @@ python-multipart>=0.0.9          # multipart/form-data uploads (documents)
 pydantic>=2.8,<3.0
 pydantic-settings>=2.4,<3.0
 
+# --- agent orchestration ------------------------------------------------------
+# LangGraph owns the pipeline state machine (extract → research → draft → audit →
+# revise → finalize). Deliberately NOT a hand-rolled loop: nodes are pure
+# functions over a typed state and the graph owns routing/retries between them.
+langgraph>=0.2,<2.0
+
 # --- LLM + research ----------------------------------------------------------
 # openai SDK is used ONLY as an OpenAI-compatible client pointed at the Nebius
 # Token Factory base URL (NEBIUS_BASE_URL) — no OpenAI models, ever.
