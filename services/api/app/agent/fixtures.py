@@ -181,6 +181,18 @@ def _revise_fixture(section_title: str):
     return _fn
 
 
+_CHAT_DECISION = """{"needs_web": false, "reason": "The project context (requirements, draft, findings) already answers this."}"""
+
+_CHAT_ANSWER = (
+    "Based on this project's extracted requirements: the proposal deadline is "
+    "**November 15, 2026, 5:00 PM ET**, the total narrative limit is **16 pages** across "
+    "sections (a)-(f), and the award ceiling is **$250,000** for a 24-month period.\n\n"
+    "The Statement of Need must cite demographic and hazard data — the current draft does, "
+    "with three sourced findings [1][2][3]. The audit's remaining suggestions are to tighten "
+    "the Statement of Need and state the 10% de minimis indirect rate in the budget."
+)
+
+
 def register() -> None:
     """Idempotently register all demo fixtures into the ModelRouter."""
     MOCK_FIXTURES["extract_requirements"] = lambda messages: _REQUIREMENTS
@@ -188,6 +200,8 @@ def register() -> None:
     MOCK_FIXTURES["outline"] = lambda messages: _OUTLINE
     MOCK_FIXTURES["compliance_audit"] = lambda messages: _AUDIT
     MOCK_FIXTURES["finalize"] = lambda messages: _FINALIZE
+    MOCK_FIXTURES["chat_decision"] = lambda messages: _CHAT_DECISION
+    MOCK_FIXTURES["chat_answer"] = lambda messages: _CHAT_ANSWER
     for title, content in _DRAFTS.items():
         MOCK_FIXTURES[f"draft:{title}"] = (lambda c: lambda messages: c)(content)
     for title in _DRAFTS:

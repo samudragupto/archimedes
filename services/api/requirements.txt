@@ -38,5 +38,9 @@ python-docx>=1.1,<2.0            # DOCX export
 reportlab>=4.2,<5.0              # PDF export (pure Python — no system libs)
 markdown-it-py>=3.0,<4.0         # markdown → docx/pdf conversion
 
+# --- auth ----------------------------------------------------------------------
+pyjwt>=2.9                       # Supabase JWT verification (HS256 secret or JWKS)
+cryptography>=43                 # RS256/ES256 verification for newer Supabase JWTs
+
 # --- Supabase (Postgres + Storage + Realtime) --------------------------------
 supabase>=2.7,<3.0

@@ -391,6 +391,90 @@ class ModelRouter:
         await self._emit(result)
         return result
 
+    async def stream(
+        self,
+        task_type: str,
+        messages: list[dict[str, str]],
+        *,
+        fixture_key: str | None = None,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+    ):
+        """Streaming completion — an async generator yielding tuples:
+
+            (delta_text, None)     for every content chunk
+            (None, LLMCallResult)  exactly once, at the end (metering)
+
+        Used by the SSE chat endpoint. Streaming calls are NOT retried by
+        tenacity (a mid-stream retry would duplicate partial output); failures
+        raise to the caller, which for chat is a user-visible 502.
+        """
+        tier, model = self.route(task_type)
+        temp, cap = self.params_for(tier, max_tokens=max_tokens, temperature=temperature)
+
+        if self.settings.mock_llm:
+            content = self._mock_content(
+                task_type, messages, json_mode=False, fixture_key=fixture_key
+            )
+            for i in range(0, len(content), 24):
+                yield content[i : i + 24], None
+            yield None, LLMCallResult(
+                task_type=task_type,
+                tier=tier,
+                model=model,
+                content=content,
+                tokens_in=estimate_tokens(" ".join(str(m.get("content", "")) for m in messages)),
+                tokens_out=estimate_tokens(content),
+                latency_ms=1,
+                estimated_cost_usd=0.0,
+                finish_reason="stop",
+                mocked=True,
+            )
+            return
+
+        client = self._client()
+        t0 = time.perf_counter()
+        collected: list[str] = []
+        finish_reason: str | None = None
+        usage: Any = None
+        response = await client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temp,
+            max_tokens=cap,
+            stream=True,
+            # Nebius honors OpenAI's stream_options where supported; usage may
+            # be absent on some models — we fall back to estimates below.
+            stream_options={"include_usage": True},
+        )
+        async for chunk in response:
+            if getattr(chunk, "choices", None):
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    collected.append(delta)
+                    yield delta, None
+                if chunk.choices[0].finish_reason:
+                    finish_reason = chunk.choices[0].finish_reason
+            if getattr(chunk, "usage", None):
+                usage = chunk.usage
+        content = "".join(collected)
+        tokens_in = int(getattr(usage, "prompt_tokens", 0) or 0) or estimate_tokens(
+            " ".join(str(m.get("content", "")) for m in messages)
+        )
+        tokens_out = int(getattr(usage, "completion_tokens", 0) or 0) or estimate_tokens(content)
+        yield None, LLMCallResult(
+            task_type=task_type,
+            tier=tier,
+            model=model,
+            content=content,
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            latency_ms=max(1, int((time.perf_counter() - t0) * 1000)),
+            estimated_cost_usd=round(self.estimate_cost(tier, tokens_in, tokens_out), 6),
+            finish_reason=finish_reason or "stop",
+            mocked=False,
+        )
+
     async def _call_once(self, body: dict[str, Any]) -> Any:
         client = self._client()
         # max_retries=0 on the SDK: tenacity above owns retry policy so attempts

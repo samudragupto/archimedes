@@ -1,0 +1,25 @@
+# =============================================================================
+# ARCHIMEDES · worker image (LangGraph pipeline runner)
+#   docker build -f services/api/Dockerfile.worker -t archimedes-worker services/api
+#
+# One image, two modes:
+#   * Nebius Serverless Job → CMD runs single-job mode (JOB_ID is injected by
+#     the API at submit time; the job container exits when the pipeline ends)
+#   * docker compose / any always-on host → override the command with
+#     `python worker/main.py --poll` to run the claim loop
+# =============================================================================
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+# Single-job mode: requires JOB_ID (set by job_launcher for Nebius Jobs).
+CMD ["python", "worker/main.py"]

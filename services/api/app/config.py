@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""  # server-side only; bypasses RLS
+    # Legacy Supabase projects sign access tokens with a shared HS256 secret
+    # (Dashboard → Settings → API → JWT Secret). Newer projects publish an ES256
+    # JWKS; when the secret is empty we verify against the JWKS instead.
+    supabase_jwt_secret: str = ""
 
     # --- worker runtime --------------------------------------------------------
     # true  → API spawns worker/main.py as a local subprocess per job
@@ -50,6 +54,10 @@ class Settings(BaseSettings):
     # Deterministic fixtures instead of live model + research calls. One switch
     # covers both LLM and Tavily so `make test` needs zero credits.
     mock_llm: bool = False
+
+    # --- API server knobs -------------------------------------------------------
+    cors_origins: str = "*"  # comma-separated list; "*" is fine for local dev
+    nebius_jobs_api_url: str = "https://api.nebius.com/v2/jobs"  # confirm in Nebius console
 
     # --- internal knobs (not in .env.example; overridable for tests) ----------
     llm_timeout_seconds: float = 120.0

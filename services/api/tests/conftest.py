@@ -18,3 +18,6 @@ os.environ.setdefault("NEMOTRON_NANO_MODEL", "test/nemotron-nano")
 os.environ.setdefault("NEMOTRON_SUPER_MODEL", "test/nemotron-super")
 os.environ.setdefault("NEMOTRON_ULTRA_MODEL", "test/nemotron-ultra")
 os.environ.setdefault("TAVILY_API_KEY", "test-tavily-key")
+os.environ.setdefault(
+    "SUPABASE_JWT_SECRET", "test-jwt-secret-0123456789abcdef0123456789abcdef"
+)  # HS256 path in tests

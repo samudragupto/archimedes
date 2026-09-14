@@ -15,7 +15,9 @@ exclude = [".venv"]
 select = ["E", "F", "I", "B", "UP", "W"]
 # E501: line length is enforced by black at 100; ruff stays lenient on the
 # occasional long string (prompts, URLs) to avoid noise.
-ignore = ["E501"]
+# B008: `Depends(get_current_user)` in parameter defaults is the canonical
+# FastAPI DI pattern, not a bug.
+ignore = ["E501", "B008"]
 
 # ---- formatting -------------------------------------------------------------
 [tool.black]

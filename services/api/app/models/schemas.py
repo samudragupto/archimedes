@@ -242,6 +242,23 @@ class JobEvent(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# API request bodies (routers)
+# ---------------------------------------------------------------------------
+class ProjectCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=300)
+    funder_name: str | None = Field(default=None, max_length=300)
+
+
+class SectionUpdate(BaseModel):
+    content_md: str = Field(min_length=1)
+    title: str | None = Field(default=None, max_length=200)
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=8000)
+
+
+# ---------------------------------------------------------------------------
 # LLM telemetry
 # ---------------------------------------------------------------------------
 class LLMCallResult(BaseModel):

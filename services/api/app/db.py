@@ -202,3 +202,140 @@ def replace_issues(project_id: str, issues: list[ComplianceIssue]) -> None:
         return
     rows = [{**i.model_dump(exclude={"id"}), "project_id": project_id} for i in issues]
     sb.table("compliance_issues").insert(rows).execute()
+
+
+# ---------------------------------------------------------------------------
+# API-facing queries (routers) — all filtered by the authenticated user
+# because the service-role client bypasses RLS by design
+# ---------------------------------------------------------------------------
+def create_project(user_id: str, title: str, funder_name: str | None = None) -> dict:
+    res = (
+        _client()
+        .table("projects")
+        .insert({"user_id": user_id, "title": title, "funder_name": funder_name})
+        .execute()
+    )
+    return (res.data or [{}])[0]
+
+
+def list_projects(user_id: str) -> list[dict]:
+    res = (
+        _client()
+        .table("projects")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return res.data or []
+
+
+def create_job(project_id: str, kind: str, runtime: str) -> dict:
+    res = (
+        _client()
+        .table("jobs")
+        .insert({"project_id": project_id, "kind": kind, "runtime": runtime})
+        .execute()
+    )
+    return (res.data or [{}])[0]
+
+
+def list_jobs(project_id: str) -> list[dict]:
+    res = (
+        _client()
+        .table("jobs")
+        .select("*")
+        .eq("project_id", project_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return res.data or []
+
+
+def list_job_events(job_id: str, since: str | None = None, limit: int = 500) -> list[dict]:
+    q = _client().table("job_events").select("*").eq("job_id", job_id).order("ts")
+    if since:
+        q = q.gt("ts", since)
+    return (q.limit(limit).execute()).data or []
+
+
+def list_requirements(project_id: str) -> list[dict]:
+    return (
+        _client()
+        .table("requirements")
+        .select("*")
+        .eq("project_id", project_id)
+        .order("category")
+        .execute()
+        .data
+        or []
+    )
+
+
+def list_sections(project_id: str) -> list[dict]:
+    return (
+        _client()
+        .table("sections")
+        .select("*")
+        .eq("project_id", project_id)
+        .order("order_index")
+        .execute()
+        .data
+        or []
+    )
+
+
+def list_issues(project_id: str) -> list[dict]:
+    return (
+        _client().table("compliance_issues").select("*").eq("project_id", project_id).execute().data
+        or []
+    )
+
+
+def list_findings(project_id: str) -> list[dict]:
+    return (
+        _client().table("research_findings").select("*").eq("project_id", project_id).execute().data
+        or []
+    )
+
+
+def get_section(section_id: str) -> dict | None:
+    return (
+        _client().table("sections").select("*").eq("id", section_id).maybe_single().execute().data
+    )
+
+
+def update_section(section_id: str, **fields) -> dict:
+    fields["updated_at"] = _now()
+    res = _client().table("sections").update(fields).eq("id", section_id).execute()
+    return (res.data or [{}])[0]
+
+
+def get_issue(issue_id: str) -> dict | None:
+    return (
+        _client()
+        .table("compliance_issues")
+        .select("*")
+        .eq("id", issue_id)
+        .maybe_single()
+        .execute()
+        .data
+    )
+
+
+def update_issue(issue_id: str, **fields) -> dict:
+    fields["updated_at"] = _now()
+    res = _client().table("compliance_issues").update(fields).eq("id", issue_id).execute()
+    return (res.data or [{}])[0]
+
+
+def upsert_document(project_id: str, kind: str, fields: dict) -> dict:
+    """Replace the project's document of this kind (one-per-kind unique index)
+    and point the project at the new row."""
+    sb = _client()
+    sb.table("documents").delete().eq("project_id", project_id).eq("kind", kind).execute()
+    res = sb.table("documents").insert({"project_id": project_id, "kind": kind, **fields}).execute()
+    row = (res.data or [{}])[0]
+    pointer = "solicitation_doc_id" if kind == "solicitation" else "org_doc_id"
+    update_project(project_id, **{pointer: row.get("id")})
+    return row
