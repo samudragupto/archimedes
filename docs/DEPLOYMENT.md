@@ -1,10 +1,44 @@
 # ARCHIMEDES — Deployment & Running Guide
 
 Everything below assumes you are in the repository root. Total setup time from
-zero: **~10 minutes** (plus one-time Supabase project creation).
+zero: **~10 minutes** (plus one-time Supabase project creation). For local
+running instructions see [RUNNING.md](RUNNING.md).
 
 ---
 
+## Go-live checklist (in this order — each step verifies the next)
+
+1. [ ] **Supabase provisioned** — `0001_init.sql` run in the SQL editor
+      (tables + RLS + realtime + storage bucket). Verify: Table Editor shows
+      the 9 tables; Storage shows the private `documents` bucket.
+2. [ ] **Auth configured** — Site URL + redirect URLs include your web domain
+      (localhost and/or Vercel); GitHub provider filled if used. Verify: the
+      magic-link email arrives and lands you on the dashboard.
+3. [ ] **Secrets ready** — `NEBIUS_API_KEY`, `TAVILY_API_KEY`,
+      `SUPABASE_URL/ANON_KEY/SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` (or the
+      JWKS path). Verify: `curl "$API/health?deep=true"` reports both
+      providers `ok`.
+4. [ ] **Web deployed → Vercel** — root `apps/web`; env:
+      `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+      `NEXT_PUBLIC_API_URL` (the API's public URL). Verify: landing page loads
+      and login redirects back correctly.
+5. [ ] **API deployed → Nebius Serverless Endpoint** (or Render blueprint) —
+      image `ghcr.io/<owner>/archimedes-api` (release.yml publishes it), port
+      `8000`, all server env vars set. Verify: `curl https://<api-host>/health`
+      returns `"status":"ok"`.
+6. [ ] **Worker → Nebius Serverless Jobs** — image
+      `ghcr.io/<owner>/archimedes-worker`, command `python worker/main.py`,
+      env per §7, restart never. Then on the API:
+      `NEBIUS_SERVERLESS_ENABLED=true`, `NEBIUS_SERVERLESS_JOB_IMAGE=…`,
+      `NEBIUS_PROJECT_ID=…`, `LOCAL_WORKER_MODE=false`. Verify: run a project;
+      the UI shows runtime `nebius_serverless` and the run completes.
+7. [ ] **Demo seeded & end-to-end pass** — `make seed-demo` against the
+      production Supabase; sign in on the deployed web, open the demo project,
+      run the agent, export a PDF. Verify:
+      `services/api/.venv/bin/python scripts/smoke_test.py --live https://<api-host>`
+      → `SMOKE PASS`.
+
+---
 ## 0. Prerequisites
 
 | Tool | Version | Check |

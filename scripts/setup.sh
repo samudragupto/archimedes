@@ -16,13 +16,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 echo "→ repo root: $ROOT"
 
-command -v python3 >/dev/null || { echo "✗ python3 not found (need 3.11+)"; exit 1; }
+command -v python3 >/dev/null || { echo "[!] python3 not found (need 3.11+)"; exit 1; }
 PYVER=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 echo "→ python $PYVER"
 
 if ! command -v pnpm >/dev/null; then
   echo "⚠ pnpm not found — attempting: npm install -g pnpm (skip with ctrl-c if you don't need the web app)"
-  command -v npm >/dev/null && npm install -g pnpm || echo "✗ could not install pnpm; install it manually"
+  command -v npm >/dev/null && npm install -g pnpm || echo "[!] could not install pnpm; install it manually"
 fi
 
 VENV="$ROOT/services/api/.venv"
@@ -47,7 +47,7 @@ fi
 
 cat <<'EOF'
 
-✅ setup complete. Next steps:
+==> Setup complete. Next steps:
    1. edit .env (Nebius, Tavily, Supabase keys — or set MOCK_LLM=true)
    2. apply supabase/migrations/0001_init.sql in your Supabase SQL editor
    3. make dev        (docker)   or   make api + make worker + make web

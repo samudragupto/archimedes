@@ -33,7 +33,7 @@ RESULTS: list[tuple[bool, str]] = []
 
 def check(ok: bool, label: str) -> None:
     RESULTS.append((ok, label))
-    print(f"  {'✓' if ok else '✗'} {label}")
+    print(f"  [{'ok' if ok else 'FAIL'}] {label}")
 
 
 def load_env() -> None:
@@ -194,7 +194,7 @@ def main() -> None:
         sys.exit(0)
     print(f"SMOKE FAIL · {len(failed)} of {len(RESULTS)} checks failed:")
     for label in failed:
-        print(f"  ✗ {label}")
+        print(f"  FAIL {label}")
     sys.exit(1)
 
 

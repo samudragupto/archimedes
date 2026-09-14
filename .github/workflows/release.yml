@@ -83,5 +83,5 @@ jobs:
           sleep 5
           PORT=$(docker port "$ID" 8000/tcp | head -1 | cut -d: -f2)
           curl -fsS "http://127.0.0.1:${PORT}/health" | grep -q '"status":"ok"'
-          echo "✓ /health OK on the published image"
+          echo "/health OK on the published image"
           docker stop "$ID" >/dev/null

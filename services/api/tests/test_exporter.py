@@ -100,3 +100,23 @@ def test_composed_markdown_includes_all_parts():
     assert ABSTRACT.split()[0] in md
     assert "## Table of Contents" in md
     assert DEMO_PROJECT_TITLE  # fixture sanity
+
+
+# ---------------------------------------------------------------------------
+# PDF glyph sanitization (Times-Roman renders non-cp1252 as black boxes)
+# ---------------------------------------------------------------------------
+def test_pdf_maps_arrows_and_strips_emoji():
+    import pypdf
+
+    md = (
+        "## Plan\n\n"
+        "Ship fast \U0001f680 then iterate \u2192 done \u2705.\n\n"
+        "Typographic punctuation stays: em \u2014 dash, \u201ccurly quotes\u201d and \u2026 ellipsis.\n"
+    )
+    data = markdown_to_pdf_bytes(md, title="Rocket \U0001f680 Proposal \u2192 Final")
+    assert data[:5] == b"%PDF-"  # builds without raising
+    text = " ".join((p.extract_text() or "") for p in pypdf.PdfReader(io.BytesIO(data)).pages)
+    assert "->" in text  # arrow mapped to ASCII
+    assert "\U0001f680" not in text and "\u2705" not in text  # emoji dropped
+    assert "\u2014" in text and "\u201c" in text  # cp1252 punctuation preserved
+    assert "Rocket Proposal -> Final" in text  # cover title sanitized too

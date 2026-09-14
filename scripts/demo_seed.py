@@ -33,7 +33,7 @@ DEMO_TITLE = "Riverbend Community Flood-Resilience Network (Demo)"
 
 
 def fail(message: str) -> None:
-    print(f"✗ {message}")
+    print(f"[!] {message}")
     sys.exit(1)
 
 
@@ -75,13 +75,13 @@ def ensure_demo_user(admin) -> str:
         {"email": DEMO_EMAIL, "password": DEMO_PASSWORD}
     )
     if session and session.user:
-        print(f"✓ demo login exists ({DEMO_EMAIL})")
+        print(f"[ok] demo login exists ({DEMO_EMAIL})")
         return session.user.id
 
     created = admin.auth.admin.create_user(
         {"email": DEMO_EMAIL, "password": DEMO_PASSWORD, "email_confirm": True}
     )
-    print(f"✓ created demo login ({DEMO_EMAIL} / {DEMO_PASSWORD})")
+    print(f"[ok] created demo login ({DEMO_EMAIL} / {DEMO_PASSWORD})")
     return created.user.id
 
 
@@ -119,7 +119,7 @@ def delete_previous_demos(admin, user_id: str) -> int:
             admin.table(table).delete().eq("project_id", pid).execute()
         admin.table("projects").delete().eq("id", pid).execute()
     if rows:
-        print(f"✓ removed {len(rows)} previous demo project(s)")
+        print(f"[ok] removed {len(rows)} previous demo project(s)")
     return len(rows)
 
 
@@ -151,7 +151,7 @@ def main() -> None:
         DEMO_TITLE,
         funder_name="Community Resilience Fund",
     )
-    print(f"✓ created project {project['id']}")
+    print(f"[ok] created project {project['id']}")
 
     job = create_job(project["id"], "full_pipeline", "local")
     reporter = SupabaseRunReporter(job_id=job["id"], project_id=project["id"])

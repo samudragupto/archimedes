@@ -20,7 +20,7 @@ Grant writers cost \$100–200/hour. Archimedes costs a few cents of API credit.
 
 `NVIDIA Nemotron on Nebius Token Factory` · `LangGraph` · `Tavily` · `Supabase` · `FastAPI` · `Next.js 14` · `Nebius Serverless`
 
-**Quick links:** [10-minute Quickstart](#-10-minute-quickstart) · [Demo without credits](#-demo-without-any-credits) · [Architecture](#%EF%B8%8F-architecture) · [How we use Nebius & NVIDIA](#-how-we-use-nebius-token-factory--nvidia-nemotron) · [How we use Tavily](#-how-we-use-tavily) · [Deployment](docs/DEPLOYMENT.md) · [PRD](docs/PRD.md)
+**Quick links:** [10-minute Quickstart](#10-minute-quickstart) · [Demo without credits](#demo-without-any-credits) · [Architecture](#architecture) · [How we use Nebius & NVIDIA](#how-we-use-nebius-token-factory--nvidia-nemotron) · [How we use Tavily](#how-we-use-tavily) · [Running](docs/RUNNING.md) · [Deployment](docs/DEPLOYMENT.md) · [PRD](docs/PRD.md)
 
 </div>
 
@@ -41,18 +41,18 @@ chat window.
 
 | Stage | What happens | Who does it |
 |---|---|---|
-| 📄 **Extract** | Every requirement (deadline, budget cap, eligibility, sections + page limits, formatting, review criteria) with verbatim source quotes | Nemotron **Nano** |
-| 🔎 **Research** | 4–8 targeted Tavily searches planned per section; findings stored with URLs | Nemotron **Super** + Tavily |
-| ✍️ **Draft** | Every required section, sized to page limits, inline `[n]` citations from fetched sources only | Nemotron **Ultra** |
-| 🛡️ **Audit** | Draft scored against every mandatory rule: `100 − blockers·25 − majors·10 − minors·3` | Nemotron **Super** |
-| 🔁 **Revise** | Sections with blocker/major issues rewritten with the fixes (max 2 rounds) | Nemotron **Ultra** |
-| 📦 **Finalize** | Title, 150-word abstract, TOC, references; export to MD/DOCX/PDF | Nemotron **Nano** + exporter |
+| **Extract** | Every requirement (deadline, budget cap, eligibility, sections + page limits, formatting, review criteria) with verbatim source quotes | Nemotron **Nano** |
+| **Research** | 4–8 targeted Tavily searches planned per section; findings stored with URLs | Nemotron **Super** + Tavily |
+| **Draft** | Every required section, sized to page limits, inline `[n]` citations from fetched sources only | Nemotron **Ultra** |
+| **Audit** | Draft scored against every mandatory rule: `100 − blockers·25 − majors·10 − minors·3` | Nemotron **Super** |
+| **Revise** | Sections with blocker/major issues rewritten with the fixes (max 2 rounds) | Nemotron **Ultra** |
+| **Finalize** | Title, 150-word abstract, TOC, references; export to MD/DOCX/PDF | Nemotron **Nano** + exporter |
 
 You watch it all live: a terminal-style agent trace with a colored badge per
 call (**Nano** green · **Super** blue · **Ultra** purple · **Tavily** orange),
 tokens, latency, estimated cost, and a live progress bar.
 
-## ⚡ 10-minute quickstart
+## 10-minute quickstart
 
 ```bash
 # 1 · clone + install (python venv + pnpm) + create .env
@@ -77,7 +77,7 @@ make smoke            # 9-check smoke test (offline; --live URL probes a running
 Full step-by-step (Supabase provisioning, OAuth, Vercel, Nebius Serverless):
 **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
-## 🎬 Demo without any credits
+## Demo without any credits
 
 Three ways, all offline:
 
@@ -95,7 +95,7 @@ can never be mistaken for live research.
 With credits, `worker/main.py --demo --live` runs the same bundled mock
 solicitation against real Nemotron + Tavily.
 
-## 🏗️ How we use Nebius Token Factory & NVIDIA Nemotron
+## How we use Nebius Token Factory & NVIDIA Nemotron
 
 **All** LLM inference goes through the Nebius Token Factory
 (`https://api.studio.nebius.com/v1/`, OpenAI-compatible) on **NVIDIA
@@ -117,7 +117,7 @@ and **logs every call** (model, tokens in/out, latency, estimated cost) to
 through a tested escalation ladder. Details:
 [docs/NEBIUS_NVIDIA_USAGE.md](docs/NEBIUS_NVIDIA_USAGE.md).
 
-## 🔎 How we use Tavily
+## How we use Tavily
 
 The `plan_research` node (Super) turns extracted requirements into 4–8
 specific queries with rationale and target sections; `run_research` executes
@@ -126,7 +126,7 @@ Findings are stored **only** from what Tavily actually returned — the drafting
 node cites `[n]` exclusively against that numbering, and the reference list is
 built from the same list. No fabricated citations, by construction.
 
-## ☁️ How we use Nebius Serverless
+## How we use Nebius Serverless
 
 The same worker container runs three ways: **Nebius Serverless Job** (one
 containerized run per proposal, `JOB_ID` injected), a **polling claim-loop
@@ -135,7 +135,7 @@ container**, or a **local subprocess** spawned by the API (`LOCAL_WORKER_MODE=tr
 with Render.com documented as a fallback. Job progress streams to the browser
 through Supabase Realtime either way. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-## 🏛️ Architecture
+## Architecture
 
 ```mermaid
 flowchart TD

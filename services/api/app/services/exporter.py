@@ -179,6 +179,38 @@ def _escape(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+# Times-Roman (a reportlab core font) only speaks WinAnsi/cp1252 — anything
+# outside that repertoire (emoji, arrows, dingbats, CJK) renders as a black
+# box in the PDF. Live Nemotron drafts occasionally contain emoji, so every
+# PDF-bound string passes through this map-or-drop filter. Typographic
+# characters that ARE cp1252 (— – " " ' … •) are kept. The DOCX path is left
+# untouched: Word performs its own font fallback and renders emoji fine.
+_CP1252_SUBSTITUTES = {
+    "\u2190": "<-",  # ←
+    "\u2192": "->",  # →
+    "\u2191": "^",  # ↑
+    "\u2193": "v",  # ↓
+    "\u2194": "<->",  # ↔
+    "\u00a0": " ",  # nbsp → plain space (safer for justification)
+}
+
+
+def _latinize(text: str) -> str:
+    """Map known symbols to ASCII equivalents; drop everything cp1252 can't render."""
+    out: list[str] = []
+    for ch in text:
+        sub = _CP1252_SUBSTITUTES.get(ch)
+        if sub is not None:
+            out.append(sub)
+            continue
+        try:
+            ch.encode("cp1252")
+        except UnicodeEncodeError:
+            continue
+        out.append(ch)
+    return "".join(out)
+
+
 def _inline_to_rl(text: str) -> str:
     """Markdown inline → reportlab paragraph markup (escape first, then style)."""
     out = _escape(text)
@@ -192,6 +224,11 @@ def markdown_to_pdf_bytes(
     markdown: str, *, title: str | None = None, organization: str | None = None
 ) -> bytes:
     """Render the proposal to a serif PDF with a cover page."""
+    # sanitize BEFORE parsing: emoji/arrows from live model output must never
+    # reach Times-Roman (it renders unknown glyphs as black boxes)
+    markdown = _latinize(markdown)
+    title = _latinize(title) if title else title
+    organization = _latinize(organization) if organization else organization
     from reportlab.lib.enums import TA_CENTER
     from reportlab.lib.pagesizes import LETTER
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
