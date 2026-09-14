@@ -64,6 +64,19 @@ def _spawn_local_worker(job_id: str, settings: Settings) -> dict:
         "MOCK_LLM": str(settings.mock_llm).lower(),
     }
     log_file = open(log_path, "ab")  # child keeps the fd; we close ours
+    # Detach the child so it survives API restarts/reloads. POSIX has session
+    # semantics; Windows has none — detach from the console instead
+    # (constants are Windows-only attributes, hence the getattr guard).
+    detach: dict = (
+        {"start_new_session": True}
+        if os.name == "posix"
+        else {
+            # Windows-only subprocess constants — guarded so non-Windows
+            # type-checking and runtime never touch them.
+            "creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+            | getattr(subprocess, "DETACHED_PROCESS", 0)
+        }
+    )
     try:
         proc = subprocess.Popen(  # noqa: S603 — fixed argv, no shell
             [sys.executable, str(WORKER_SCRIPT)],
@@ -71,7 +84,7 @@ def _spawn_local_worker(job_id: str, settings: Settings) -> dict:
             env=env,
             stdout=log_file,
             stderr=subprocess.STDOUT,
-            start_new_session=True,  # survive API restarts/reloads
+            **detach,
         )
     finally:
         log_file.close()

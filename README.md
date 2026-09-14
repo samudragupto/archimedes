@@ -75,7 +75,8 @@ make smoke            # 9-check smoke test (offline; --live URL probes a running
 ```
 
 Full step-by-step (Supabase provisioning, OAuth, Vercel, Nebius Serverless):
-**[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
+**[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** · complete run guide (incl. Windows/WSL):
+**[docs/RUNNING.md](docs/RUNNING.md)**.
 
 ## Demo without any credits
 

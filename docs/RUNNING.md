@@ -3,6 +3,7 @@
 Every way to run the product, from a zero-credit terminal tour to the full
 three-process stack. Deployment to cloud hosts is covered separately in
 [DEPLOYMENT.md](DEPLOYMENT.md); this page is about running it yourself.
+**On Windows?** Jump to [§7 — Running on Windows](#7--running-on-windows-wsl2-or-native).
 
 ---
 
@@ -159,3 +160,100 @@ restarts).
 | `make migrate` / `make seed-sql` | apply the schema migration / demo seed SQL |
 | `make seed-demo` | create the demo project through the real pipeline (needs Supabase) |
 | `make build-images` | build the api + worker container images |
+
+---
+
+## 7 · Running on Windows (WSL2 or native)
+
+Both paths work. **WSL2 is the recommended one** — you get the exact
+`make`-driven flow the rest of this guide describes, and the local-worker
+spawn was tested against POSIX semantics first. Native PowerShell works too
+(the job launcher auto-detects Windows and detaches worker processes
+appropriately), but `make` isn't available, so you run the commands directly.
+
+### Option A — WSL2 (recommended)
+
+One-time setup — in an **Administrator** PowerShell:
+
+```powershell
+wsl --install          # installs WSL2 + Ubuntu; reboot when asked
+```
+
+Then open Ubuntu (Start menu) and set up the toolchain:
+
+```bash
+sudo apt update && sudo apt install -y python3 python3-venv python3-pip git build-essential
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt install -y nodejs
+# optional, for `make dev`: install Docker Desktop on Windows and enable
+# Settings -> Resources -> WSL Integration for this distro
+```
+
+Clone into the **Linux filesystem** (not `/mnt/c/...` — file I/O there is
+~10x slower and venvs misbehave):
+
+```bash
+cd ~
+git clone <your-fork> archimedes && cd archimedes
+git config core.autocrlf input   # keep LF line endings inside WSL
+make setup && make demo          # then continue with §2 for the full stack
+```
+
+Everything else is identical to the Linux flow: `make api`, `make worker`,
+`make web`, `make smoke`, `make seed-demo`. Open the UI from your Windows
+browser at **http://localhost:3000** — WSL2 forwards localhost automatically.
+
+Tips:
+
+- Edit `.env` from Windows: the repo is at `\\wsl$\Ubuntu\home\<you>\archimedes`,
+  or just run `code .` inside WSL (VS Code + WSL extension).
+- Keep the venv, node_modules and repo inside WSL's own filesystem.
+- If `localhost:3000` doesn't respond after a Windows reboot, restart the
+  distro: `wsl --shutdown`, then reopen Ubuntu.
+
+### Option B — native PowerShell (no WSL)
+
+Prerequisites: **Python 3.11+** from python.org (tick "Add python.exe to
+PATH") and **Node.js 18+** from nodejs.org. `git` from git-scm.com.
+
+```powershell
+git clone <your-fork> archimedes; cd archimedes
+Copy-Item .env.example .env        # then fill your keys (see §2.2)
+
+# Python deps
+python -m venv services\api\.venv
+services\api\.venv\Scripts\python -m pip install -r services\api\requirements.txt -r services\api\requirements-dev.txt
+
+# Web deps
+cd apps\web; npm install; cd ..\..
+```
+
+Run each process in its own terminal (activate the venv first for API/worker;
+if script execution is blocked: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`):
+
+```powershell
+# terminal 1 — API (http://localhost:8000, docs at /docs)
+cd services\api
+.\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload --port 8000
+
+# terminal 2 — worker (optional; with LOCAL_WORKER_MODE=true the API also
+# spawns workers itself — this is fully supported on Windows)
+cd services\api
+.\.venv\Scripts\Activate.ps1
+python worker\main.py --poll
+
+# terminal 3 — web (http://localhost:3000)
+cd apps\web
+npm run dev
+```
+
+Equivalent verification commands (no `make` on Windows):
+
+```powershell
+services\api\.venv\Scripts\python -m pytest services\api\tests -q      # 148 offline tests
+$env:MOCK_LLM="true"; services\api\.venv\Scripts\python scripts\smoke_test.py
+services\api\.venv\Scripts\python worker\main.py --demo               # offline pipeline tour
+```
+
+Or skip processes entirely and use the containers (Docker Desktop with WSL2
+backend): `docker compose up --build` — no `make` needed, same `docker-compose.yml`.
