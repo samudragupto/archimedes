@@ -1,6 +1,10 @@
 # Development & CI tools — installed by `make setup` (see Makefile venv target)
+#
+# The three style/type gates are PINNED: formatting must be byte-identical on
+# every laptop and in CI (a drifted black once failed `black --check` on a
+# file the author never touched). Dependabot proposes controlled bumps.
 pytest>=8.0
 pytest-asyncio>=0.24
-ruff>=0.6
-black>=24.8
-mypy>=1.11
+ruff==0.16.8
+black==26.5.1
+mypy==2.3.1
