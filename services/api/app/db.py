@@ -317,12 +317,7 @@ def update_section(section_id: str, **fields) -> dict:
 
 def get_issue(issue_id: str) -> dict | None:
     res = (
-        _client()
-        .table("compliance_issues")
-        .select("*")
-        .eq("id", issue_id)
-        .maybe_single()
-        .execute()
+        _client().table("compliance_issues").select("*").eq("id", issue_id).maybe_single().execute()
     )
     return _one(res)
 
