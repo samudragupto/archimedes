@@ -41,6 +41,7 @@ def _client() -> Any:
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
+
 def _one(res: Any) -> dict | None:
     """maybe_single() returns None (not a response) on zero rows in postgrest>=2.x."""
     return res.data if res is not None else None
@@ -306,7 +307,6 @@ def list_findings(project_id: str) -> list[dict]:
 def get_section(section_id: str) -> dict | None:
     res = _client().table("sections").select("*").eq("id", section_id).maybe_single().execute()
     return _one(res)
-
 
 
 def update_section(section_id: str, **fields) -> dict:
