@@ -4,7 +4,7 @@
 # every laptop and in CI (a drifted black once failed `black --check` on a
 # file the author never touched). Dependabot proposes controlled bumps.
 pytest>=8.0
-pytest-asyncio>=0.24
+pytest-asyncio>=1.4.0
 ruff==0.16.8
 black==26.5.1
 mypy==2.3.1
