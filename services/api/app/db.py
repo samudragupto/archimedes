@@ -41,13 +41,17 @@ def _client() -> Any:
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
+def _one(res: Any) -> dict | None:
+    """maybe_single() returns None (not a response) on zero rows in postgrest>=2.x."""
+    return res.data if res is not None else None
+
 
 # ---------------------------------------------------------------------------
 # jobs + job_events
 # ---------------------------------------------------------------------------
 def get_job(job_id: str) -> dict | None:
     res = _client().table("jobs").select("*").eq("id", job_id).maybe_single().execute()
-    return res.data
+    return _one(res)
 
 
 def update_job(job_id: str, **fields) -> None:
@@ -121,7 +125,7 @@ def claim_next_queued_job() -> dict | None:
 # ---------------------------------------------------------------------------
 def get_project(project_id: str) -> dict | None:
     res = _client().table("projects").select("*").eq("id", project_id).maybe_single().execute()
-    return res.data
+    return _one(res)
 
 
 def update_project(project_id: str, **fields) -> None:
@@ -142,7 +146,7 @@ def get_document(project_id: str, kind: str) -> dict | None:
         .maybe_single()
         .execute()
     )
-    return res.data
+    return _one(res)
 
 
 # ---------------------------------------------------------------------------
@@ -300,9 +304,9 @@ def list_findings(project_id: str) -> list[dict]:
 
 
 def get_section(section_id: str) -> dict | None:
-    return (
-        _client().table("sections").select("*").eq("id", section_id).maybe_single().execute().data
-    )
+    res = _client().table("sections").select("*").eq("id", section_id).maybe_single().execute()
+    return _one(res)
+
 
 
 def update_section(section_id: str, **fields) -> dict:
@@ -312,15 +316,15 @@ def update_section(section_id: str, **fields) -> dict:
 
 
 def get_issue(issue_id: str) -> dict | None:
-    return (
+    res = (
         _client()
         .table("compliance_issues")
         .select("*")
         .eq("id", issue_id)
         .maybe_single()
         .execute()
-        .data
     )
+    return _one(res)
 
 
 def update_issue(issue_id: str, **fields) -> dict:
