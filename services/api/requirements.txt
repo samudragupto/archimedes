@@ -43,4 +43,4 @@ pyjwt>=2.9                       # Supabase JWT verification (HS256 secret or JW
 cryptography>=43                 # RS256/ES256 verification for newer Supabase JWTs
 
 # --- Supabase (Postgres + Storage + Realtime) --------------------------------
-supabase>=2.7,<3.0
+supabase>=2.31.0,<3.0
