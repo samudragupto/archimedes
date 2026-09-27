@@ -36,7 +36,7 @@ tavily-python>=0.5               # official SDK (sync chat-tool path)
 pypdf>=4.3,<6.0                  # PDF text extraction
 python-docx>=1.1,<2.0            # DOCX export
 reportlab>=4.2,<5.0              # PDF export (pure Python — no system libs)
-markdown-it-py>=3.0,<4.0         # markdown → docx/pdf conversion
+markdown-it-py>=4.2.0,<5.0         # markdown → docx/pdf conversion
 
 # --- auth ----------------------------------------------------------------------
 pyjwt>=2.9                       # Supabase JWT verification (HS256 secret or JWKS)
